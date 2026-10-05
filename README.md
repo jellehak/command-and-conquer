@@ -9,6 +9,48 @@ This project is only intended as a technical proof of concept to demonstrate the
 
 This game works best on Google Chrome or Mozilla Firefox. The images can take a little while to load so please be patient.
 
+## Running the game
+
+The game is built from native ES modules, so it has to be served over HTTP.
+Opening `index.html` directly from the filesystem will not work because
+browsers block module loading on `file://` URLs.
+
+```
+python3 -m http.server 8000
+```
+
+Then open http://localhost:8000 in your browser.
+
+There is no build step and no dependencies. `index.html` loads `js/main.js`
+as a module, which boots the game.
+
+## Project layout
+
+```
+index.html          entry document
+js/main.js          module entry point, boots the game
+js/core/dom.js      canvas + debug panel elements (leaf of the import graph)
+js/core/            assets, entity model, grid queries, geometry, A*
+js/game/            game loop, input, sidebar, units, buildings, levels, ...
+tools/smoke-test.mjs headless test for the module graph and game state
+```
+
+Import cycles between subsystems are expected: game state is held in shared
+singleton objects, and functions reference each other across modules. Because
+modules resolve before they evaluate, these are safe as long as the values are
+only touched inside function bodies, which is how the code is written.
+
+## Tests
+
+```
+node tools/smoke-test.mjs
+```
+
+The test stubs out the DOM, canvas, audio and image loading, then boots the
+real modules and exercises level loading, preloading, animation frames, mouse
+and keyboard input, control groups, the debug panel, the sidebar dependency
+checks and pathfinding.
+
 ## Notes & Demo URL
 
 You can find a working demo of this project on http://www.adityaravishankar.com/projects/games/command-and-conquer-demo/
